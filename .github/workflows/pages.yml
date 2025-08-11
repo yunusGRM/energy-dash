@@ -1,0 +1,60 @@
+name: Build & Deploy Dashboard to Pages
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"     # every 15 minutes
+  workflow_dispatch:            # manual run button
+  push:
+    branches: ["main"]          # rebuild on pushes (optional)
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate site (HTML + JSON)
+        run: |
+          mkdir -p site
+          python - << 'PY'
+from __init__ import get_all_energy_data, create_comprehensive_dashboard
+import json
+data = get_all_energy_data()
+open("site/data.json","w",encoding="utf-8").write(json.dumps(data, indent=2, default=str))
+open("site/index.html","w",encoding="utf-8").write(create_comprehensive_dashboard(data))
+PY
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
