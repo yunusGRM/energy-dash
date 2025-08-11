@@ -1,0 +1,5 @@
+azure-functions
+pandas
+requests
+pytz
+numpy
