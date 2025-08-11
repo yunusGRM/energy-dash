@@ -2,10 +2,10 @@ name: Build & Deploy Dashboard to Pages
 
 on:
   schedule:
-    - cron: "*/15 * * * *"     # every 15 minutes
-  workflow_dispatch:            # manual run button
+    - cron: "*/15 * * * *"   # every 15 minutes
+  workflow_dispatch:
   push:
-    branches: ["main"]          # rebuild on pushes (optional)
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -36,13 +36,13 @@ jobs:
       - name: Generate site (HTML + JSON)
         run: |
           mkdir -p site
-          python - << 'PY'
-from __init__ import get_all_energy_data, create_comprehensive_dashboard
-import json
-data = get_all_energy_data()
-open("site/data.json","w",encoding="utf-8").write(json.dumps(data, indent=2, default=str))
-open("site/index.html","w",encoding="utf-8").write(create_comprehensive_dashboard(data))
-PY
+          python - <<'PY'
+          from __init__ import get_all_energy_data, create_comprehensive_dashboard
+          import json
+          data = get_all_energy_data()
+          open("site/data.json","w",encoding="utf-8").write(json.dumps(data, indent=2, default=str))
+          open("site/index.html","w",encoding="utf-8").write(create_comprehensive_dashboard(data))
+          PY
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
